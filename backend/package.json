@@ -1,0 +1,9 @@
+{
+  "name":"vajra-nyay-backend",
+  "version":"1.0.0",
+  "private":true,
+  "description":"Vajra Nyay backend - complaints, case status and lawyer registry API",
+  "main":"server.js",
+  "scripts":{"start":"node server.js"},
+  "dependencies":{"cors":"^2.8.5","dotenv":"^16.4.7","express":"^4.21.2"}
+}
