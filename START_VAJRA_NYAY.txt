@@ -1,0 +1,9 @@
+VAJRA NYAY - LIVE BACKEND
+
+1. Install Node.js if needed.
+2. Open PowerShell in this folder.
+3. Run: npm start
+4. Open: http://localhost:3000
+
+The existing app design/buttons are kept. Backend URL can be http://localhost:3000.
+API URL is optional and should point to an API endpoint that accepts POST /complaints.
