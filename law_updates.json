@@ -1,0 +1,14 @@
+{
+  "lastChecked": "2026-09-23T09:11:30.134Z",
+  "sources": {
+    "indiaCode": "https://www.indiacode.nic.in/indiacode/home.jsp",
+    "indiaCodeHi": "https://www.indiacode.nic.in/indiacode/?locale=hi",
+    "legislative": "https://www.legislative.gov.in/"
+  },
+  "acts": [],
+  "amendments": [],
+  "errors": [
+    "India Code: getaddrinfo EAI_AGAIN www.indiacode.nic.in"
+  ],
+  "updatePolicy": "Automatic official-source check; new entries are catalogued, not silently treated as verified legal text."
+}
