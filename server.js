@@ -103,14 +103,15 @@ function bnsSmartAnswer(q){
     {re:/\b329\b|criminal trespass|house trespass|आपराधिक अतिचार|घर में घुसना/, title:'Criminal trespass / house-trespass', sec:'329', old:'IPC 441/447 आदि', desc:'Criminal trespass और house-trespass की शुरुआत BNS की धारा 329 में है; आगे की परिस्थितियों के लिए संबंधित धाराएँ देखनी होती हैं.'}
   ];
 
+  // Comparison questions first, so a phrase like “BNS और IPC में क्या अंतर है?”
+  // cannot be mistaken for a generic “what is BNS?” question.
+  if(/bns.*ipc|ipc.*bns|अंतर|difference|compare|तुलना/.test(s)){
+    return `**BNS और IPC का तथ्यात्मक अंतर:**\n\n• **BNS:** Bharatiya Nyaya Sanhita, 2023 — भारत का वर्तमान principal substantive criminal law framework.\n• **IPC:** Indian Penal Code, 1860 — पुराना principal penal code, जिसे BNS ने repeal किया.\n• कई offences की numbering/wording बदली है; उदाहरण के लिए theft **BNS 303**, cheating **BNS 318**, और murder का मुख्य दंड प्रावधान **BNS 103** है.\n• किसी पुराने IPC case या घटना में केवल section number देखकर BNS section लागू मानना सही नहीं; घटना की तारीख, transitional provisions और facts देखना जरूरी है.\n\n**Source:** Official India Code — BNS, 2023.`;
+  }
+
   // Definition / identity questions.
   if(/^(?:what is|meaning of|define|क्या है|मतलब|का मतलब|kya hai|ka matlab|full form)\b/.test(s) || /bns.*(?:क्या|मतलब|meaning|full form|kya|matlab)|(?:क्या|मतलब|meaning|kya|matlab).*bns/.test(s)){
     return `**BNS** का पूरा नाम **Bharatiya Nyaya Sanhita, 2023 (भारतीय न्याय संहिता, 2023)** है। यह offences और उनसे जुड़े दंड से संबंधित प्रमुख criminal law है। India Code में यह **Act No. 45 of 2023** के रूप में दर्ज है। BNS ने IPC, 1860 को repeal किया; लेकिन किसी घटना में कौन-सा कानून/प्रावधान लागू होगा, यह घटना की तारीख और facts पर निर्भर कर सकता है।\n\n**Source:** Official India Code — BNS, 2023.`;
-  }
-
-  // Comparison questions: give factual mapping, not a ranking.
-  if(/bns.*ipc|ipc.*bns|अंतर|difference|compare|तुलना/.test(s)){
-    return `**BNS और IPC का तथ्यात्मक अंतर:**\n\n• **BNS:** Bharatiya Nyaya Sanhita, 2023 — नया substantive criminal law framework.\n• **IPC:** Indian Penal Code, 1860 — पुराना principal penal code, जिसे BNS ने repeal किया.\n• कई offences की numbering बदली है; उदाहरण के लिए theft **BNS 303**, cheating **BNS 318**, murder का मुख्य दंड प्रावधान **BNS 103** है.\n• किसी पुराने IPC case या घटना में सिर्फ section number देखकर BNS section लागू मानना सही नहीं; घटना की तारीख और transitional/applicable provisions देखना जरूरी है.\n\nOfficial current text: India Code.`;
   }
 
   for(const e of entries){
@@ -126,8 +127,39 @@ function bnsSmartAnswer(q){
   return null;
 }
 
+function smartOtherLawAnswer(q){
+  const raw=String(q||'').trim();
+  const s=raw.toLowerCase().replace(/[?؟]/g,' ');
+
+  // BNSS — procedure
+  if(/\bbnss\b|bharatiya nagarik suraksha sanhita|भारतीय नागरिक सुरक्षा संहिता|\bcrpc\b|दंड प्रक्रिया/.test(s)){
+    if(/bnss.*(?:crpc|ipc)|crpc.*bnss|bnss.*अंतर|bnss.*difference|तुलना/.test(s)){
+      return `**BNSS और CrPC का तथ्यात्मक अंतर:**\n\n• **BNSS:** Bharatiya Nagarik Suraksha Sanhita, 2023 — criminal procedure से संबंधित वर्तमान प्रमुख संहिता।\n• **CrPC:** Code of Criminal Procedure, 1973 — पुरानी criminal-procedure code, जिसे BNSS ने repeal किया।\n• FIR, investigation, arrest, bail, trial और अन्य procedural matters में BNSS के वर्तमान provisions देखे जाते हैं।\n• पुराने मामले में केवल नया section number देखकर BNSS provision लागू नहीं मानना चाहिए; घटना/कार्यवाही की तारीख और transitional provisions देखना जरूरी है।\n\n**Source:** Official India Code.`;
+    }
+    if(/fir|एफआईआर|first information|शिकायत/.test(s)){
+      return `**BNSS और FIR:**\n\nFIR से संबंधित criminal-procedure नियम BNSS में देखे जाते हैं। किसी specific घटना में कौन-सा procedural provision लागू होगा, यह facts, offence की प्रकृति और घटना/कार्यवाही की तारीख पर निर्भर करता है।\n\n**ध्यान दें:** केवल FIR की धाराएँ देखकर किसी मामले का अंतिम कानूनी निष्कर्ष नहीं निकाला जा सकता। Current official BNSS text verify करें।\n\n**Source:** Official India Code.`;
+    }
+    if(/arrest|गिरफ्तार|हिरासत|custody|bail|जमानत|investigation|जांच|search|तलाशी|seizure|जब्ती/.test(s)){
+      return `**BNSS — criminal procedure:**\n\nयह गिरफ्तारी, जांच, जमानत, तलाशी/जब्ती, FIR और trial जैसी criminal-procedure प्रक्रियाओं से संबंधित प्रमुख संहिता है। Exact section facts और वर्तमान official text देखकर ही तय किया जाना चाहिए।\n\n**Source:** Official India Code.`;
+    }
+    return `**BNSS** का पूरा नाम **Bharatiya Nagarik Suraksha Sanhita, 2023 (भारतीय नागरिक सुरक्षा संहिता, 2023)** है। यह criminal procedure से संबंधित प्रमुख भारतीय संहिता है। FIR, गिरफ्तारी, जांच, जमानत और trial जैसी प्रक्रियाओं में इसके provisions देखे जाते हैं।\n\n**Source:** Official India Code.`;
+  }
+
+  // BSA — evidence
+  if(/\bbsa\b|bharatiya sakshya adhiniyam|भारतीय साक्ष्य अधिनियम|\bindian evidence act\b|evidence|साक्ष्य|सबूत/.test(s)){
+    if(/bsa.*(?:evidence act|indian evidence)|evidence.*bsa|bsa.*अंतर|bsa.*difference|तुलना/.test(s)){
+      return `**BSA और पुराने Indian Evidence Act का तथ्यात्मक अंतर:**\n\n• **BSA:** Bharatiya Sakshya Adhiniyam, 2023 — evidence law का वर्तमान प्रमुख framework।\n• **Indian Evidence Act, 1872:** पुराना evidence statute, जिसे BSA ने repeal किया।\n• Documents, electronic/digital records और अन्य evidence के proof/admissibility से जुड़े नियम BSA के current text में देखे जाते हैं।\n• किसी पुराने proceeding में केवल नए section number से निष्कर्ष नहीं निकालना चाहिए; applicable date/transitional provisions देखना जरूरी है।\n\n**Source:** Official India Code.`;
+    }
+    if(/electronic|digital|मोबाइल|whatsapp|chat|ईमेल|email|सीसीटीवी|cctv|audio|video|फोटो|photo/.test(s)){
+      return `**BSA और electronic evidence:**\n\nElectronic/digital records के evidence rules BSA के current framework में देखे जाते हैं। किसी specific file, phone, chat, CCTV या recording की admissibility/proof facts, source, integrity और लागू provisions पर निर्भर करती है।\n\nइसलिए केवल “यह digital है” कहने से यह तय नहीं किया जा सकता कि court में वह अपने-आप पर्याप्त proof होगा। Current official BSA text और relevant judicial interpretation verify करें।\n\n**Source:** Official India Code.`;
+    }
+    return `**BSA** का पूरा नाम **Bharatiya Sakshya Adhiniyam, 2023 (भारतीय साक्ष्य अधिनियम, 2023)** है। यह evidence से संबंधित प्रमुख भारतीय कानून है और documents तथा electronic/digital records सहित evidence के rules से संबंधित है।\n\n**Source:** Official India Code.`;
+  }
+  return null;
+}
+
 function constitutionalArticleAnswer(q){
-  const m=q.match(/(?:अनुच्छेद|article|art\.?)[\s:-]*(\d{1,3})(?:\s*([a-z]{1,3}))?/i);
+  const m=q.match(/(?:अनुच्छेद|article|art\.?)[\s:-]*(\d{1,3})([a-z]{1,3})?/i);
   if(!m)return null;
   const n=m[1]+(m[2]?m[2].toUpperCase():'');
   const title=CONSTITUTION_KB.key_articles?.[n];
@@ -210,6 +242,8 @@ if(req.url==='/api/pocket-rights'&&req.method==='POST'){
   // and fact-pattern questions get a deterministic law-aware response first.
   const bnsAnswer=bnsSmartAnswer(q);
   if(bnsAnswer) return send(res,200,{ok:true,answer:bnsAnswer,source:'BNS structured law reference'});
+  const otherLawAnswer=smartOtherLawAnswer(q);
+  if(otherLawAnswer) return send(res,200,{ok:true,answer:otherLawAnswer,source:'BNSS/BSA structured law reference'});
   const fallback=constitutionalFallback(q);
   if(fallback) return send(res,200,{ok:true,answer:fallback,source:'Built-in Constitution & Law Reference'});
   if(!process.env.GROQ_API_KEY){
