@@ -85,8 +85,47 @@ const safeLoad=(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||JSON.strin
 const post=document.getElementById('petitionPost');post&&post.addEventListener('click',()=>{const t=document.getElementById('petitionText').value.trim(),target=Math.max(0,Number(document.getElementById('petitionTarget').value||0));if(!t)return alert('समस्या लिखें।');const a=safeLoad('VN_PETITIONS',[]);a.push({id:'JV-'+Date.now().toString(36).toUpperCase(),text:t,target,raised:0,anonymous:true,time:new Date().toLocaleString('hi-IN')});safeSave('VN_PETITIONS',a);document.getElementById('petitionText').value='';renderPetitions()});
 function renderPetitions(){const el=document.getElementById('petitionList');if(!el)return;const a=safeLoad('VN_PETITIONS',[]).slice().reverse();el.innerHTML=a.map(x=>`<div class="feature-card"><span class="anon-badge">ANONYMOUS</span><p>${String(x.text).replace(/[<>]/g,'')}</p><div class="small">लक्ष्य ₹${x.target||0} • अभी ₹${x.raised||0}</div><button class="tool-btn" data-support="${x.id}">सहायता करने की जानकारी</button></div>`).join('')||'<p class="small">अभी कोई जन-आवाज पोस्ट नहीं।';el.querySelectorAll('[data-support]').forEach(b=>b.onclick=()=>alert('वास्तविक donation gateway अभी जोड़ा नहीं गया है।'))}renderPetitions();
 const rightsAnswer=document.getElementById('rightsAnswer');
-const VN_DEFAULT_BACKEND='https://vajra-nyay-1.onrender.com'; const VN_API_BASE=(()=>{const saved=(localStorage.getItem('VN_BACKEND_URL')||'').trim().replace(/\/$/,''); if(!saved){localStorage.setItem('VN_BACKEND_URL',VN_DEFAULT_BACKEND); return VN_DEFAULT_BACKEND;} return saved;})();
-const askRights=async(q)=>{q=(q||'').trim();if(!q)return alert('अपना सवाल लिखें।');rightsAnswer.textContent='⏳ जवाब तैयार हो रहा है...';try{const r=await fetch((VN_API_BASE||'')+'/api/pocket-rights',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})});const d=await r.json().catch(()=>({}));if(r.ok&&d.answer){rightsAnswer.textContent=d.answer;return;}rightsAnswer.textContent='⚠️ जवाब नहीं मिला: '+(d.error||'API error');}catch(e){rightsAnswer.textContent='⚠️ Backend connection नहीं हो पाया। Vajra Nyay server (localhost:3000) चालू है या नहीं देखें।'}};
+const VN_DEFAULT_BACKEND='https://vajra-nyay-1.onrender.com';
+const VN_API_BASE=(()=>{
+  const saved=(localStorage.getItem('VN_BACKEND_URL')||'').trim().replace(/\/$/,'');
+  const isBadLocal=/^(https?:\/\/)?(localhost|127\\.0\\.0\\.1)(:\\d+)?$/i.test(saved);
+  const base=(!saved||isBadLocal)?VN_DEFAULT_BACKEND:saved;
+  localStorage.setItem('VN_BACKEND_URL',base);
+  return base;
+})();
+const askRights=async(q)=>{
+  q=(q||'').trim();
+  if(!q)return alert('अपना सवाल लिखें।');
+  rightsAnswer.textContent='⏳ जवाब तैयार हो रहा है...';
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),30000);
+  try{
+    const base=(VN_API_BASE||VN_DEFAULT_BACKEND).replace(/\/$/,'');
+    const r=await fetch(base+'/api/pocket-rights',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({question:q}),
+      signal:controller.signal
+    });
+    const raw=await r.text();
+    let d={};
+    try{d=raw?JSON.parse(raw):{};}catch(_){}
+    if(r.ok&&d.answer){
+      rightsAnswer.textContent=d.answer;
+      return;
+    }
+    const detail=d.error||d.message||raw||('HTTP '+r.status);
+    rightsAnswer.textContent='⚠️ जवाब नहीं मिला: '+detail;
+  }catch(e){
+    if(e&&e.name==='AbortError'){
+      rightsAnswer.textContent='⚠️ जवाब आने में बहुत समय लग रहा है। Backend/Groq को एक बार फिर कोशिश करें।';
+    }else{
+      rightsAnswer.textContent='⚠️ Backend connection नहीं हो पाया। Render backend: '+(VN_API_BASE||VN_DEFAULT_BACKEND);
+    }
+  }finally{
+    clearTimeout(timer);
+  }
+};
 document.getElementById('rightsAsk')?.addEventListener('click',()=>askRights(document.getElementById('rightsQuestion').value));
 document.getElementById('rightsQuestion')?.addEventListener('keydown',e=>{if(e.key==='Enter')askRights(e.target.value)});
 const constitutionIndexBtn=document.getElementById('constitutionIndexBtn');
