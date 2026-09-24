@@ -264,7 +264,16 @@ if(req.url==='/api/pocket-rights'&&req.method==='POST'){
 if(req.url.startsWith('/api/complaints')&&req.method==='GET'){const d=read(),q=new URL(req.url,'http://localhost').searchParams.get('q')?.toLowerCase()||'';return send(res,200,(d.complaints||[]).filter(x=>!q||String(x.id).toLowerCase().includes(q)||String(x.category||'').toLowerCase().includes(q)))}
 if(req.url==='/api/complaints'&&req.method==='POST'){const x=await body(req),d=read();d.complaints=d.complaints||[];const i=d.complaints.findIndex(v=>v.id===x.id);if(i>=0)d.complaints[i]={...d.complaints[i],...x};else d.complaints.push(x);write(d);return send(res,201,{ok:true,complaint:x})}
 if(req.url.startsWith('/api/complaints/')&&req.method==='GET'){const id=decodeURIComponent(req.url.split('/').pop()),x=(read().complaints||[]).find(v=>v.id===id);return x?send(res,200,x):send(res,404,{ok:false,error:'Case not found'})}
-if(req.method==='GET'&&(req.url==='/'||req.url==='/index.html')){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});return fs.createReadStream(path.join(__dirname,'index.html')).pipe(res)}
+if(req.method==='GET'&&(req.url==='/'||req.url==='/index.html')){
+  // Render may run this file from /backend, where the frontend index.html is one level above.
+  const candidates=[path.join(__dirname,'index.html'),path.join(__dirname,'..','index.html')];
+  const htmlFile=candidates.find(f=>fs.existsSync(f));
+  if(!htmlFile){return send(res,200,{ok:true,service:'VAJRA NYAY BACKEND',message:'Backend is running. Frontend is hosted separately on GitHub Pages.'});}
+  res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});
+  const stream=fs.createReadStream(htmlFile);
+  stream.on('error',()=>{if(!res.headersSent)send(res,500,{ok:false,error:'Frontend file could not be read'});else res.destroy();});
+  return stream.pipe(res);
+}
 send(res,404,{ok:false,error:'Not found'})}catch(e){send(res,500,{ok:false,error:e.message})}});
 scheduleLawSync();
 server.listen(PORT,()=>console.log(`VAJRA NYAY: http://localhost:${PORT}`));
